@@ -265,14 +265,7 @@
 
 <div id="app">
     <!-- STATUS BAR -->
-    <div class="status-bar">
-        <span class="status-time" id="status-time">9:41</span>
-        <div class="status-icons">
-            <span class="status-signal" id="status-sig">▂▄▆█</span>
-            <span>📶</span>
-            <span>🔋</span>
-        </div>
-    </div>
+    <div style="height:env(safe-area-inset-top, 0px)"></div>
 
     <div class="pages-wrapper">
 
@@ -2339,12 +2332,6 @@ function toast(msg) {
 // ═══════════════════════════════════════════════
 //  CLOCK
 // ═══════════════════════════════════════════════
-function tick() {
-    const n = new Date();
-    document.getElementById('status-time').textContent =
-        n.getHours().toString().padStart(2,'0') + ':' + n.getMinutes().toString().padStart(2,'0');
-}
-tick(); setInterval(tick, 1000);
 
 // ═══════════════════════════════════════════════
 //  MATRIX RAIN
