@@ -573,7 +573,10 @@
 <div class="modal-overlay" id="modal-add">
     <div class="modal-sheet">
         <div class="modal-handle"></div>
-        <div class="modal-title">Nuevo movimiento</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <div class="modal-title" style="margin-bottom:0">Nuevo movimiento</div>
+            <button onclick="closeAddModal()" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.10);border:none;color:var(--text2);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
+        </div>
         <div class="type-tabs">
             <div class="type-tab active" id="tipo-gasto"   onclick="setTipo('gasto')">💸 Gasto</div>
             <div class="type-tab"        id="tipo-ingreso" onclick="setTipo('ingreso')">💵 Ingreso extra</div>
@@ -595,7 +598,6 @@
                 <div class="cat-opt"          data-cat="subs"      onclick="selectCat('subs')">     <span class="cat-emoji">📱</span> <span class="cat-name">Subs</span></div>
                 <div class="cat-opt"          data-cat="pandero"   onclick="selectCat('pandero')">  <span class="cat-emoji">💰</span> <span class="cat-name">Pandero</span></div>
                 <div class="cat-opt"          data-cat="gustos"    onclick="selectCat('gustos')">   <span class="cat-emoji">✨</span> <span class="cat-name">Gustos</span></div>
-                <div class="cat-opt"          data-cat="prestamos" onclick="selectCat('prestamos')"><span class="cat-emoji">🤝</span> <span class="cat-name">Préstamo</span></div>
             </div>
         </div>
 
@@ -1725,8 +1727,9 @@ function confirmPayment() {
         : `Préstamo ${l.persona} cuota ${num}/${total}${nota ? ' · ' + nota : ''}`;
 
     // Transacción real con la fecha exacta del pago
+    const txnId = Date.now() + '';
     D.transactions.push({
-        id:          Date.now() + '',
+        id:          txnId,
         monto:       l.monto_cuota,
         descripcion: desc,
         fecha,
@@ -1734,9 +1737,9 @@ function confirmPayment() {
         tipo:        'gasto',
     });
 
-    // Guardar en historial de pagos del préstamo
+    // Guardar en historial de pagos del préstamo (con txn_id para poder borrarlo)
     if (!l.pagos) l.pagos = [];
-    l.pagos.push({ fecha, monto: l.monto_cuota, nota, cuota: num });
+    l.pagos.push({ fecha, monto: l.monto_cuota, nota, cuota: num, txn_id: txnId });
 
     l.cuotas_pagadas = num;
     if (l.cuotas_pagadas >= total) {
@@ -1750,10 +1753,20 @@ function confirmPayment() {
 }
 
 function deleteLoan(id) {
-    if (confirm('¿Eliminar este préstamo?')) {
-        D.loans = D.loans.filter(x => x.id !== id);
-        save(); renderPrestamos(); toast('🗑️ Préstamo eliminado');
+    if (!confirm('¿Eliminar este préstamo?')) return;
+    const loan = D.loans.find(x => x.id === id);
+    D.loans = D.loans.filter(x => x.id !== id);
+    // Borrar transacción de ingreso asociada y pagos registrados
+    if (loan) {
+        if (loan.ingreso_txn_id)
+            D.transactions = D.transactions.filter(t => t.id !== loan.ingreso_txn_id);
+        // Borrar transacciones de pago de cuotas
+        (loan.pagos || []).forEach(p => {
+            if (p.txn_id) D.transactions = D.transactions.filter(t => t.id !== p.txn_id);
+        });
     }
+    save(); renderPrestamos(); renderHome();
+    toast('🗑️ Préstamo eliminado');
 }
 
 function showLoanActions(id) { /* botones en la card */ }
@@ -2260,8 +2273,9 @@ function saveLoan() {
     const totalConInteres = monto * (1 + interes / 100);
     const monto_cuota     = totalConInteres / cuotas;
     const fecha = document.getElementById('loan-fecha').value || new Date().toISOString().split('T')[0];
+    const loanId = Date.now() + '';
     D.loans.push({
-        id:             Date.now() + '',
+        id:             loanId,
         persona,
         tipo_persona:   currLoanSrc,
         tipo:           currLoanTipo,
@@ -2274,12 +2288,26 @@ function saveLoan() {
         auto_debito:    currLoanTipo === 'debo' ? currLoanAD : false,
         nota,
         fecha,
-        pagos:          [], // historial de pagos con fecha
+        pagos:          [],
         pagado:         false,
+        ingreso_txn_id: currLoanTipo === 'debo' ? 'loan_in_' + loanId : null,
     });
+
+    // Si me prestaron dinero → sube el saldo disponible como ingreso
+    if (currLoanTipo === 'debo') {
+        D.transactions.push({
+            id:          'loan_in_' + loanId,
+            monto,
+            descripcion: '💸 Préstamo de ' + persona,
+            fecha,
+            categoria:   'prestamos',
+            tipo:        'ingreso',
+        });
+    }
+
     save(); closeLoanModal();
-    toast(`✅ Préstamo registrado${currLoanAD && currLoanTipo==='debo' ? ' · se debitará el 15' : ''}`);
-    renderPrestamos();
+    toast(`✅ Préstamo registrado${currLoanTipo==='debo' ? ' · +S/'+fmtN(monto)+' sumado a tu saldo' : ''}`);
+    renderPrestamos(); renderHome();
 }
 
 // ═══════════════════════════════════════════════
