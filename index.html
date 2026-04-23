@@ -1863,7 +1863,11 @@ async function setupGistSync() {
         });
         if (res.status === 401) { toast('❌ Token inválido'); return; }
         const gists = await res.json();
-        const existing = gists.find(g => g.files && g.files['maxfinance.json']);
+        // Preferir el Gist con más contenido (el que tiene data real)
+        const candidates = gists.filter(g => g.files && g.files['maxfinance.json']);
+        const existing = candidates.length > 1
+            ? candidates.reduce((best, g) => (g.updated_at > best.updated_at ? g : best))
+            : candidates[0];
 
         const cfg = { token };
         if (existing) {
