@@ -16,6 +16,7 @@
             --purple: #BF5AF2;
             --teal: #5AC8FA;
             --bg: #000010;
+            --tab-bg: rgba(5,5,18,0.92);
             --glass: rgba(255,255,255,0.06);
             --glass-border: rgba(255,255,255,0.12);
             --glass-hover: rgba(255,255,255,0.10);
@@ -23,15 +24,32 @@
             --text2: rgba(255,255,255,0.60);
             --text3: rgba(255,255,255,0.35);
             --matrix: #00FF41;
+            --modal-bg: rgba(10,10,30,0.96);
+            --input-bg: rgba(255,255,255,0.07);
             --safe-top: env(safe-area-inset-top, 44px);
             --safe-bottom: env(safe-area-inset-bottom, 34px);
         }
+        html.light {
+            --bg: #F2F2F7;
+            --tab-bg: rgba(242,242,247,0.95);
+            --glass: rgba(255,255,255,0.75);
+            --glass-border: rgba(0,0,0,0.09);
+            --glass-hover: rgba(0,0,0,0.05);
+            --text: #1C1C1E;
+            --text2: rgba(0,0,0,0.55);
+            --text3: rgba(0,0,0,0.30);
+            --matrix: #007AFF;
+            --modal-bg: rgba(242,242,247,0.98);
+            --input-bg: rgba(0,0,0,0.05);
+        }
         * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-        html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:-apple-system,'SF Pro Display',BlinkMacSystemFont,system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
+        html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:-apple-system,'SF Pro Display',BlinkMacSystemFont,system-ui,sans-serif; -webkit-font-smoothing:antialiased; transition:background 0.3s; }
 
         /* ── BACKGROUND ── */
-        #matrix-canvas { position:fixed; top:0; left:0; width:100%; height:100%; opacity:0.045; z-index:0; pointer-events:none; }
-        .bg-gradient { position:fixed; inset:0; background: radial-gradient(ellipse at 15% 15%, rgba(0,122,255,0.18) 0%,transparent 50%), radial-gradient(ellipse at 85% 85%, rgba(191,90,242,0.12) 0%,transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(0,255,65,0.04) 0%,transparent 70%), #000010; z-index:0; animation:bgShift 9s ease-in-out infinite alternate; }
+        #matrix-canvas { position:fixed; top:0; left:0; width:100%; height:100%; opacity:0.045; z-index:0; pointer-events:none; transition:opacity 0.4s; }
+        html.light #matrix-canvas { opacity:0.015; }
+        .bg-gradient { position:fixed; inset:0; background: radial-gradient(ellipse at 15% 15%, rgba(0,122,255,0.18) 0%,transparent 50%), radial-gradient(ellipse at 85% 85%, rgba(191,90,242,0.12) 0%,transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(0,255,65,0.04) 0%,transparent 70%), #000010; z-index:0; animation:bgShift 9s ease-in-out infinite alternate; transition:all 0.3s; }
+        html.light .bg-gradient { background: radial-gradient(ellipse at 15% 15%, rgba(0,122,255,0.07) 0%,transparent 50%), radial-gradient(ellipse at 85% 85%, rgba(191,90,242,0.05) 0%,transparent 50%), #F2F2F7; }
         @keyframes bgShift { 0%{filter:hue-rotate(0deg)} 100%{filter:hue-rotate(18deg)} }
 
         /* ── SHELL ── */
@@ -50,8 +68,7 @@
         .page::-webkit-scrollbar { display:none; }
 
         /* ── TAB BAR ── */
-        .tab-bar { background:rgba(5,5,18,0.92); backdrop-filter:blur(32px) saturate(180%); -webkit-backdrop-filter:blur(32px) saturate(180%); border-top:1px solid var(--glass-border); display:flex; align-items:flex-start; padding:8px 8px 0; padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 8px); flex-shrink:0; position:relative; }
-        .tab-bar::after { content:''; position:fixed; bottom:0; left:0; right:0; height:env(safe-area-inset-bottom, 0px); background:rgba(5,5,18,0.92); z-index:0; }
+        .tab-bar { background:var(--tab-bg); backdrop-filter:blur(32px) saturate(180%); -webkit-backdrop-filter:blur(32px) saturate(180%); border-top:1px solid var(--glass-border); display:flex; align-items:flex-start; flex-shrink:0; padding:8px 4px 0; padding-bottom:env(safe-area-inset-bottom, 16px); box-sizing:content-box; }
         .tab-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:4px 0; cursor:pointer; transition:all 0.2s ease; border-radius:12px; position:relative; }
         .tab-item:active { transform:scale(0.88); }
         .tab-icon { font-size:22px; transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1); filter:grayscale(1) opacity(0.45); }
@@ -157,7 +174,7 @@
         /* ── MODAL ── */
         .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.75); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); z-index:200; display:flex; align-items:flex-end; opacity:0; pointer-events:none; transition:opacity 0.3s ease; max-width:430px; margin:0 auto; }
         .modal-overlay.open { opacity:1; pointer-events:all; }
-        .modal-sheet { width:100%; background:#10101e; border-top-left-radius:30px; border-top-right-radius:30px; padding:12px 20px calc(var(--safe-bottom) + 24px); border-top:1px solid var(--glass-border); transform:translateY(100%); transition:transform 0.42s cubic-bezier(0.25,0.46,0.45,0.94); max-height:90vh; overflow-y:auto; }
+        .modal-sheet { width:100%; background:var(--modal-bg); border-top-left-radius:30px; border-top-right-radius:30px; padding:12px 20px calc(var(--safe-bottom) + 24px); border-top:1px solid var(--glass-border); transform:translateY(100%); transition:transform 0.42s cubic-bezier(0.25,0.46,0.45,0.94); max-height:90vh; overflow-y:auto; }
         .modal-overlay.open .modal-sheet { transform:translateY(0); }
         .modal-handle { width:38px; height:5px; background:rgba(255,255,255,0.18); border-radius:3px; margin:0 auto 22px; }
         .modal-title { font-size:22px; font-weight:800; margin-bottom:20px; letter-spacing:-0.4px; }
@@ -165,9 +182,9 @@
         /* ── FORM ── */
         .form-group { margin-bottom:14px; }
         .form-label { font-size:11px; font-weight:800; color:var(--text2); text-transform:uppercase; letter-spacing:0.10em; margin-bottom:8px; display:block; }
-        .form-input { width:100%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:14px; padding:14px 16px; font-size:16px; color:white; font-family:inherit; outline:none; transition:all 0.2s; -webkit-appearance:none; }
+        .form-input { width:100%; background:var(--input-bg); border:1px solid var(--glass-border); border-radius:14px; padding:14px 16px; font-size:16px; color:var(--text); font-family:inherit; outline:none; transition:all 0.2s; -webkit-appearance:none; }
         .form-input:focus { border-color:var(--blue); background:rgba(0,122,255,0.08); box-shadow:0 0 0 3px rgba(0,122,255,0.16); }
-        .form-input::placeholder { color:rgba(255,255,255,0.22); }
+        .form-input::placeholder { color:var(--text3); }
         .amount-wrap { position:relative; }
         .amount-prefix { position:absolute; left:16px; top:50%; transform:translateY(-50%); font-size:22px; font-weight:700; color:var(--text2); }
         .amount-wrap .form-input { padding-left:36px; font-size:26px; font-weight:800; letter-spacing:-0.5px; }
@@ -277,7 +294,12 @@
                     <div class="greeting-text" id="greeting">Hola, Max 👋</div>
                     <div class="greeting-sub" id="greeting-sub">—</div>
                 </div>
-                <div class="avatar" onclick="showPage('config')">M</div>
+                <div style="display:flex;align-items:center;gap:10px">
+                    <button id="theme-btn" onclick="toggleTheme()" style="width:42px;height:26px;border-radius:13px;border:none;cursor:pointer;position:relative;transition:background 0.3s;flex-shrink:0;background:rgba(255,255,255,0.12)" title="Cambiar tema">
+                        <span id="theme-icon" style="font-size:14px;line-height:1">🌙</span>
+                    </button>
+                    <div class="avatar" onclick="showPage('config')">M</div>
+                </div>
             </div>
 
             <div id="alert-area"></div>
@@ -925,12 +947,29 @@ function refresh() {
 // ═══════════════════════════════════════════════
 //  HOME
 // ═══════════════════════════════════════════════
+function toggleTheme() {
+    const isLight = document.documentElement.classList.toggle('light');
+    document.getElementById('theme-icon').textContent = isLight ? '☀️' : '🌙';
+    document.getElementById('theme-btn').style.background = isLight ? 'rgba(0,0,0,0.10)' : 'rgba(255,255,255,0.12)';
+    localStorage.setItem('maxfinance_theme', isLight ? 'light' : 'dark');
+}
+// Restaurar tema guardado
+(function() {
+    if (localStorage.getItem('maxfinance_theme') === 'light') {
+        document.documentElement.classList.add('light');
+        // El botón se actualiza cuando renderHome() corre
+    }
+})();
+
 function renderHome() {
     const now  = new Date();
     const h    = now.getHours();
     const greet = h<12 ? 'Buenos días' : h<19 ? 'Buenas tardes' : 'Buenas noches';
     document.getElementById('greeting').textContent = greet + ', Max 👋';
     document.getElementById('greeting-sub').textContent = fmtDate(now);
+    const isLight = document.documentElement.classList.contains('light');
+    document.getElementById('theme-icon').textContent = isLight ? '☀️' : '🌙';
+    document.getElementById('theme-btn').style.background = isLight ? 'rgba(0,0,0,0.10)' : 'rgba(255,255,255,0.12)';
 
     const { daysUntil, daysInCycle, daysElapsed } = getDays15();
     document.getElementById('days-until').textContent =
