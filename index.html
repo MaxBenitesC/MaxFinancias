@@ -1854,11 +1854,33 @@ function toggleTokenVis() {
 async function setupGistSync() {
     const token = document.getElementById('gh-token-input').value.trim();
     if (!token) { toast('⚠️ Ingresa tu token'); return; }
-    toast('⏳ Conectando con GitHub...');
-    const cfg = { token };
-    saveSyncCfg(cfg);
-    await syncToGist(false, cfg);
-    renderSyncUI();
+    toast('⏳ Buscando datos existentes...');
+
+    // Buscar Gist existente con maxfinance.json
+    try {
+        const res = await fetch('https://api.github.com/gists?per_page=50', {
+            headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github+json' }
+        });
+        if (res.status === 401) { toast('❌ Token inválido'); return; }
+        const gists = await res.json();
+        const existing = gists.find(g => g.files && g.files['maxfinance.json']);
+
+        const cfg = { token };
+        if (existing) {
+            cfg.gistId   = existing.id;
+            cfg.lastSync = new Date().toISOString();
+            saveSyncCfg(cfg);
+            toast('⬇️ Gist encontrado, cargando datos...');
+            await syncFromGist(true);
+        } else {
+            saveSyncCfg(cfg);
+            toast('☁️ No hay Gist previo, creando uno nuevo...');
+            await syncToGist(true, cfg);
+        }
+        renderSyncUI();
+    } catch(e) {
+        toast('❌ Sin conexión');
+    }
 }
 
 async function syncToGist(showToast=true, cfgOverride=null) {
